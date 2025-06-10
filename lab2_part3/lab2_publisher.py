@@ -21,14 +21,19 @@ exit_flag = False
 
 logger = logging.getLogger(__name__)
 
-def notification_handler(s, sender, data):
+ctx = zmq.Context()
+# s = ctx.socket(zmq.XPUB)
+s = ctx.socket(zmq.PUB)
+
+
+def notification_handler(sender, data):
     sensorvalues = struct.unpack("fff", data)
     # print("data:",sensorvalues)
     ##############################publisher
-    array = np.array(sensorvalues, dtype=np.float)
+    array = np.array(sensorvalues, dtype=np.float32)
     md = {"shape": array.shape, "dtype": str(array.dtype)}
 
-    s.send_json(md, zmq.SNDMORE)
+    s.send_json(md, zmq.SNDMORE) #send sequence of buffers aka not the last
     s.send(array)
     ##############################publisher
 
@@ -36,12 +41,10 @@ async def main(args: argparse.Namespace):
     global exit_flag
 
     ##############################publisher
-    ctx = zmq.Context()
-    s = ctx.socket(zmq.PUB)
     s.bind(args.url)
-    print("Waiting for subscriber")
-    s.recv()
-    print("Sending arrays...")
+    # print("Waiting for subscriber")
+    # s.recv()
+    # print("Sending arrays...")
     ##############################publisher
 
     logger.info("starting scan...")
@@ -64,7 +67,7 @@ async def main(args: argparse.Namespace):
         logger.info("connected")
 
         await client.start_notify(BLE_UUID_ACCEL_SENSOR_DATA,
-                                  notification_handler(s)) #bleak roept not_hand aan waardoor geen arg nodig voor uuid en data-bytes
+                                  notification_handler) #bleak roept not_hand aan waardoor geen arg nodig voor uuid en data-bytes
 
         while not exit_flag:
             if keyboard.is_pressed('a'):
@@ -83,7 +86,6 @@ async def main(args: argparse.Namespace):
 if __name__ == "__main__":
 
 #execute this file as: "python lab2_sensor.py --name <arduino_local_name>
-
 
     parser = argparse.ArgumentParser()
 
@@ -122,7 +124,8 @@ if __name__ == "__main__":
 
     ##############################publisher
     parser.add_argument("--url", default="tcp://127.0.0.1:5555")
-    
+    ##############################publisher
+
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO

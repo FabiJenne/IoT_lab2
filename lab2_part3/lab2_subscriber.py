@@ -31,41 +31,11 @@ def main() -> None:
     s.connect(args.url)
     s.subscribe(b'')
 
-    # md = s.recv_json()
-    # msg = s.recv()
-    # while msg: 
-    #     array = np.frombuffer(msg, dtype=md["dtype"])
-    #     array = array.reshape(md["shape"])
-    #     print("Ontvangen sensorwaarden:", array)
-
     while True:
         array = recv_array(s)
         if array is None: #geen array binnen gekomen
             break
         print(array)
-    # start = time.perf_counter()
-    # print("Receiving arrays...")
-    # a = first_array = recv_array(s)
-    # assert first_array is not None
-    # array_count = 0
-    # while a is not None:
-    #     array_count += 1
-    #     a = recv_array(s)
-    # print("   Done.")
-
-    # end = time.perf_counter()
-
-    # elapsed = end - start
-
-    # throughput = float(array_count) / elapsed
-
-    # message_size = first_array.nbytes
-    # megabits = float(throughput * message_size * 8) / 1000000
-
-    # print(f"message size: {message_size:.0f} [B]")
-    # print(f"array count: {array_count:.0f}")
-    # print(f"mean throughput: {throughput:.0f} [msg/s]")
-    # print(f"mean throughput: {megabits:.3f} [Mb/s]")
 
 
 if __name__ == "__main__":
