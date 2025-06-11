@@ -55,7 +55,7 @@ async def main(args: argparse.Namespace):
 
         # await client.read_gatt_char(BLE_UUID_ACCEL_SENSOR_DATA) #eenmalig uitlezen GATT characteristic, geeft bytes terug
         await client.start_notify(BLE_UUID_ACCEL_SENSOR_DATA,
-                                  notification_handler) #
+                                  notification_handler)
         
 
         while not exit_flag:

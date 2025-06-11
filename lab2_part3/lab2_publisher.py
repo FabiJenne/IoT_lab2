@@ -17,6 +17,7 @@ import zmq
 import keyboard
 
 BLE_UUID_ACCEL_SENSOR_DATA = "4664E7A1-5A13-BFFF-4636-7D0A4B16496C"
+BLE_UUID_GYRO_SENSOR_DATA = "4664E7A1-5A13-BFFF-4636-7D0A4B16496D"
 exit_flag = False
 
 logger = logging.getLogger(__name__)
@@ -26,16 +27,26 @@ ctx = zmq.Context()
 s = ctx.socket(zmq.PUB)
 
 
-def notification_handler(sender, data):
+def notification_handler_accel(sender, data):
     sensorvalues = struct.unpack("fff", data)
-    # print("data:",sensorvalues)
     ##############################publisher
     array = np.array(sensorvalues, dtype=np.float32)
     md = {"shape": array.shape, "dtype": str(array.dtype)}
-
+    
+    s.send_string("accel", zmq.SNDMORE)  # topic als eerste frame
     s.send_json(md, zmq.SNDMORE) #send sequence of buffers aka not the last
     s.send(array)
     ##############################publisher
+
+def notification_handler_gyro(sender, data):
+    sensorvalues = struct.unpack("fff", data)
+    array = np.array(sensorvalues, dtype=np.float32)
+    md = {"shape": array.shape, "dtype": str(array.dtype)}
+    
+    s.send_string("gyro", zmq.SNDMORE)  # topic als eerste frame
+    s.send_json(md, zmq.SNDMORE) #send sequence of buffers aka not the last
+    s.send(array)
+
 
 async def main(args: argparse.Namespace):
     global exit_flag
@@ -67,7 +78,9 @@ async def main(args: argparse.Namespace):
         logger.info("connected")
 
         await client.start_notify(BLE_UUID_ACCEL_SENSOR_DATA,
-                                  notification_handler) #bleak roept not_hand aan waardoor geen arg nodig voor uuid en data-bytes
+                                  notification_handler_accel) #bleak roept not_hand aan waardoor geen arg nodig voor uuid en data-bytes
+        await client.start_notify(BLE_UUID_GYRO_SENSOR_DATA,
+                                  notification_handler_gyro) #bleak roept not_hand aan waardoor geen arg nodig voor uuid en data-bytes
 
         while not exit_flag:
             if keyboard.is_pressed('a'):
@@ -78,6 +91,7 @@ async def main(args: argparse.Namespace):
         logger.info("disconnecting...")
 
     await client.stop_notify(BLE_UUID_ACCEL_SENSOR_DATA)
+    await client.stop_notify(BLE_UUID_GYRO_SENSOR_DATA)
     s.send_json({"done": True})
     s.close()
     logger.info("disconnected")
