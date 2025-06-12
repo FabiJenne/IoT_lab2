@@ -234,10 +234,10 @@ class Lab2(QMainWindow):
                                              "border-radius: 5px;")
 
     def to_file(self):
-        all_data = zip(self.data.timestamps, self.data.x, self.data.y, self.data.z)
+        all_data = zip(self.data.timestamps, self.data.x, self.data.y, self.data.z, self.data.gx, self.data.gy, self.data.gz)
         with open("data.csv", 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['Timestamp', 'X', 'Y', 'Z'])
+            writer.writerow(['Timestamp', 'accel-X', 'accel-Y', 'accel-Z', 'gyro-X', 'gyro-Y', 'gyro-Z'])
             for row in all_data:
                 writer.writerow(row)
 
